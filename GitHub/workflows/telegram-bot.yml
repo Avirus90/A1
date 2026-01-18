@@ -1,0 +1,84 @@
+name: Telegram Bot Auto-Updater
+
+on:
+  push:
+    paths:
+      - 'api/content.json'
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  telegram-bot:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Run Telegram Bot
+      env:
+        BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+        ADMIN_ID: ${{ secrets.ADMIN_ID }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        python -c "
+import os
+import telebot
+import json
+import requests
+from github import Github
+
+# Initialize
+bot = telebot.TeleBot(os.getenv('BOT_TOKEN'))
+ADMIN_ID = int(os.getenv('ADMIN_ID'))
+
+# Channel ID (Change this after creating channel)
+CHANNEL_ID = '@StorageBimbaContent'
+
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    bot.reply_to(message, 'Welcome to StorageBimba Bot! Send videos/PDFs to upload.')
+
+@bot.message_handler(content_types=['video', 'document', 'photo'])
+def handle_upload(message):
+    if message.from_user.id != ADMIN_ID:
+        bot.reply_to(message, '⚠️ Only admin can upload content.')
+        return
+    
+    try:
+        # Forward to channel
+        if message.video:
+            msg = bot.forward_message(CHANNEL_ID, message.chat.id, message.message_id)
+            content_type = 'video'
+        elif message.document:
+            msg = bot.forward_message(CHANNEL_ID, message.chat.id, message.message_id)
+            content_type = 'pdf'
+        
+        # Update content.json on GitHub
+        update_github_content({
+            'id': str(msg.message_id),
+            'title': message.caption or 'Untitled',
+            'type': content_type,
+            'telegram_id': str(msg.message_id),
+            'date': message.date
+        })
+        
+        bot.reply_to(message, f'✅ Uploaded! ID: {msg.message_id}')
+        
+    except Exception as e:
+        bot.reply_to(message, f'❌ Error: {str(e)}')
+
+def update_github_content(new_item):
+    # This function will update the content.json file
+    # Implementation requires GitHub API
+    pass
+
+print('Bot is running...')
+bot.polling()
+        "
