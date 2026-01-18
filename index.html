@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StorageBimba - Free EdTech Platform</title>
+    <style>
+        /* Complete styling code as before */
+        /* ... previous CSS code ... */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 StorageBimba EdTech</h1>
+            <p>Free Education Platform powered by Telegram</p>
+        </header>
+
+        <div class="content">
+            <div id="video-player" class="video-player">
+                <!-- Video will load here -->
+                <div class="loading">Select a video to play</div>
+            </div>
+
+            <div class="controls">
+                <h2>Courses Available</h2>
+                <div class="filters">
+                    <button class="filter-btn active" onclick="filterContent('all')">All</button>
+                    <button class="filter-btn" onclick="filterContent('video')">Videos</button>
+                    <button class="filter-btn" onclick="filterContent('pdf')">PDFs</button>
+                    <button class="filter-btn" onclick="filterContent('test')">Tests</button>
+                </div>
+            </div>
+
+            <div id="course-grid" class="course-grid">
+                <!-- Content will load here dynamically -->
+                <div class="loading">Loading content...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Telegram Channel ID (Create a public channel first)
+        const CHANNEL_ID = '@YourPublicChannelName'; // Change this
+        
+        // Fetch content from GitHub
+        async function loadContent() {
+            try {
+                const response = await fetch('api/content.json');
+                const data = await response.json();
+                displayContent(data);
+            } catch (error) {
+                // Fallback: Load from Telegram bot
+                fetchFromTelegram();
+            }
+        }
+        
+        async function fetchFromTelegram() {
+            // Using GitHub Actions as proxy
+            const response = await fetch('https://api.github.com/repos/YOUR_USERNAME/YOUR_REPO/contents/api/content.json');
+            const data = await response.json();
+            const content = JSON.parse(atob(data.content));
+            displayContent(content);
+        }
+        
+        function displayContent(courses) {
+            const container = document.getElementById('course-grid');
+            container.innerHTML = '';
+            
+            courses.forEach(course => {
+                const card = document.createElement('div');
+                card.className = 'course-card';
+                card.innerHTML = `
+                    <h3>${course.title}</h3>
+                    <p>${course.description}</p>
+                    <div class="meta">
+                        <span>📹 ${course.type}</span>
+                        <span>⏱️ ${course.duration}</span>
+                    </div>
+                    <button onclick="playVideo('${course.id}')" class="btn">
+                        Watch Now
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        function playVideo(videoId) {
+            // Telegram embed player
+            const player = document.getElementById('video-player');
+            player.innerHTML = `
+                <iframe 
+                    src="https://t.me/c/${CHANNEL_ID}/${videoId}?embed=1&mode=tme"
+                    width="100%"
+                    height="100%"
+                    frameborder="0"
+                    allowfullscreen>
+                </iframe>
+            `;
+        }
+        
+        // Load content on page load
+        loadContent();
+    </script>
+</body>
+</html>
