@@ -1,0 +1,22 @@
+{
+  "courses": [
+    {
+      "id": "101",
+      "title": "Physics - Newton's Laws",
+      "description": "Complete explanation with examples",
+      "type": "video",
+      "duration": "45 min",
+      "telegram_id": "123",
+      "date": "2024-01-15"
+    },
+    {
+      "id": "102", 
+      "title": "Chemistry Formulas PDF",
+      "description": "All important formulas for Class 12",
+      "type": "pdf",
+      "duration": "30 pages",
+      "telegram_id": "124",
+      "date": "2024-01-14"
+    }
+  ]
+}
